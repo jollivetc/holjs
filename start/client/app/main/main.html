@@ -1,0 +1,155 @@
+<!-- Menu -->
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<!-- Page content -->
+<div class="container-fluid">
+  <div class="row-fluide">
+
+    <!-- Game Management -->
+    <div class="col-md-6">
+
+      <div class="panel panel-default panel-games panel-info">
+
+        <!-- Game creation and filter-->
+        <div class="panel-heading">
+
+          <div class="pull-right">
+            <div class="btn-group game-filter-toolbar">
+              <!-- Filter active -->
+              <button class="btn btn-default btn-xs active" type="button">
+                Actives
+              </button>
+              <!-- Filter closed -->
+              <button class="btn btn-default btn-xs" type="button">
+                Terminées
+              </button>
+            </div>
+            <!-- Game creation -->
+            <button class="btn btn-primary" type="button">
+              Créer partie
+            </button>
+          </div>
+
+          <div class="panel-title"><h5>Liste des parties</h5></div>
+
+        </div>
+
+        <!-- Game list -->
+        <div class="panel-body">
+          <div class="list-group list-games">
+
+            <div class="list-group-item" >
+
+              <!-- Boutons à droite -->
+              <div class="pull-right btn-group btn-group-sm">
+                <button type="button" class="btn btn-danger">
+                  <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <!-- Game label -->
+              <div class="bold">
+                <span>Test vs Admin</span>
+                <button class="btn btn-primary btn-xs btn-success" type="button">
+                  Joindre
+                </button>
+              </div>
+
+              <!-- Selected glyph -->
+              <span class="selected-glyph glyphicon glyphicon-check"></span>
+              <!-- Unselected glyph -->
+              <span class="unselected-glyph glyphicon glyphicon-unchecked"></span>
+
+            </div>
+          </div>
+          <div class="list-group list-games">
+
+            <div class="list-group-item">
+
+              <!-- Boutons à droite -->
+              <div class="pull-right btn-group btn-group-sm">
+                <button type="button" class="btn btn-danger">
+                  <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                </button>
+              </div>
+
+              <!-- Game label -->
+              <div class="bold">
+                <span>Test vs </span>
+                <button class="btn btn-primary btn-xs btn-success" type="button">
+                  Joindre
+                </button>
+              </div>
+
+              <!-- Selected glyph -->
+              <span class="selected-glyph glyphicon glyphicon-check"></span>
+              <!-- Unselected glyph -->
+              <span class="unselected-glyph glyphicon glyphicon-unchecked"></span>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="panel panel-default panel-scores panel-success">
+
+        <!-- Titre list -->
+        <div class="panel-heading">
+          <div class="panel-title"><h5>Classement</h5></div>
+        </div>
+
+        <!-- Scores -->
+        <div class="panel-body">
+          <div class="list-group list-scores">
+            <div class="list-group-item">
+
+              <!-- Victoires -->
+              <div class="pull-right btn-group btn-group-sm">
+                <label>2</label>
+              </div>
+
+              <!-- Nom du joueur -->
+              <div class="bold">
+                <span>1</span> <span class="glyphicon glyphicon-user"></span> <span>Admin</span>
+              </div>
+
+            </div>
+          </div>
+          <div class="list-group list-scores">
+            <div class="list-group-item">
+
+              <!-- Victoires -->
+              <div class="pull-right btn-group btn-group-sm">
+                <label>1</label>
+              </div>
+
+              <!-- Nom du joueur -->
+              <div class="bold">
+                <span>2</span> <span class="glyphicon glyphicon-user"></span> <span>Test</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Gameboard panel -->
+    <div class="col-md-6">
+      <div ui-view ></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <p>Angular Fullstack v2.0.13 |
+      <a href="https://twitter.com/mdebonnaire">@mdebonnaire</a>
+    </p>
+  </div>
+</footer>

@@ -1,0 +1,105 @@
+.thing-form {
+    margin: 20px 0;
+}
+
+#banner {
+    border-bottom: none;
+    margin-top: -20px;
+}
+
+#banner h1 {
+    font-size: 60px;
+    line-height: 1;
+    letter-spacing: -1px;
+}
+
+#listCheckbox {
+  position: absolute;
+  top: 8px;
+  right: 7px;
+  font-size: 24px;
+}
+
+.panel-games {
+
+  .panel-heading {
+    .game-filter-toolbar {
+      margin-right: 20px;
+    }
+  }
+
+  .panel-body {
+
+    height: 360px;
+    overflow: auto;
+
+    .list-games {
+
+      .list-group-item {
+        cursor: pointer;
+        padding-right: 40px;
+        min-height: 50px;
+        font-size: 16px;
+        // Effets lors du survole et sélection
+        &:hover {
+          //background-color: lightgray;
+          padding-top: 6px;
+          padding-left: 11px;
+          padding-right: 36px;
+          border-width: 5px;
+          // Check box de bout de ligne
+          >.unselected-glyph, >.selected-glyph {
+            top: 4px;
+            right: 3px;
+          }
+        }
+        &.active {
+          position: relative;
+          left: 5px;
+        }
+        // Check box de bout de ligne
+        >.unselected-glyph {
+          @extend #listCheckbox;
+          display: block;
+        }
+        >.selected-glyph {
+          @extend #listCheckbox;
+          display: none;
+        }
+        // Etat sélectionné
+        &.active {
+          >.selected-glyph {
+            display: block;
+          }
+          >.unselected-glyph {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+
+//.panel-scores {
+//  .panel-body {
+//    height: 640px;
+//    overflow: auto;
+//  }
+//}
+
+.hero-unit {
+    position: relative;
+    padding: 30px 15px;
+    color: #F5F5F5;
+    text-align: center;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+    background: #4393B9;
+}
+
+.footer {
+    text-align: center;
+    padding: 30px 0;
+    margin-top: 70px;
+    border-top: 1px solid #E5E5E5;
+}

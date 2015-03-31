@@ -1,0 +1,34 @@
+<div class="panel panel-default">
+
+  <div class="panel-heading">
+    <div class="panel-title">
+      <h5>Nouvelle partie</h5>
+    </div>
+  </div>
+
+  <div class="panel-body">
+    <div ng-if="userConnected && !gameCreated">
+
+      <div class="form-group">
+        <input class="pull-left" style="margin: 5px 10px 5px 5px;" type="checkbox"
+               ng-model="newGame.turnPlayer" ng-true-value="1" ng-false-value="2"/>
+        <label class="form-label">Vous commencez.</label>
+      </div>
+      <div>
+        <button class="btn btn-primary" type="button" ng-click="validateNewGame()">Valider</button>
+      </div>
+    </div>
+    <div ng-if="gameCreated">
+
+      <alert  type="success">Vous venez de créer une partie</alert>
+      <button class="btn btn-primary" type="button" ng-click="display()">Ok</button>
+ 
+    </div>
+    <div ng-if="!userConnected">
+      <div>
+        Vous devez être connecté pour créer une partie.
+      </div>
+    </div>
+  </div>
+
+</div>
