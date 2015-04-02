@@ -1,133 +1,13 @@
 
 
-## Intro Yeoman
+## Introduction aux outils
 Pour cet exercice nous allons utiliser une variante du code obtenu par le générateur Angular Fullstack disponible dans Yeoman.
 
+Pour exécuter les tests, vous utiliserez la commande `grunt test`.
+Les tests pour la partie client sont visibles à la fin du log qui défile, ceux de la partie serveur sont au milieu du log, vous devrez scroller vers le haut.
 
-## creation du controller REST pour game
-Nous allons exposer via un service REST des ressources `game` qui représenteront les parties.
-Pour cela nous commençons par créer un nouveau module avec un répertoire `/server/api/game`
-
-Puis nous créeons un fichier `game.controller.js` qui sera le controller
-
-```javascript
-// handle the 500 reply in case of error.
-function handleError(res, err) {
-  return res.send(500, err);
-}
-
-//load the current game and call next middleware or return 404 if not found
-export.loadGameById = function(req, res, next, id){
-  if(id==='404') res.status(404).json({message:'no game for this id'});
-
-  req.game = {'id' : id, name:'game loaded'};
-  return next();
-};
-
-// Get list of games
-exports.index = function (req, res) {
-  var games = [
-    {id:0, name:'foo'},
-    {id:1, name:'bar'}
-  ];
-  return res.json(200, games);
-};
-
-// Get a single game
-exports.show = function(req, res){
-  return res.json(req.game);
-};
-
-// Create a new game in the DB.
-exports.create = function (req, res) {
-  return res.json(201, {id:'new ID', name:'just created'});
-};
-
-// Update an existing game in the DB.
-exports.update = function (req, res) {
-  req.game.name = "just updated";
-  return res.json(200, req.game);
-};
-
-// Validate and play turn
-exports.validateAndPlayTurn = function (req, res) {
-  var position = parseInt(req.params.position);
-  var userName = req.user.name;
-  req.game.name = 'player '+ userName + 'just played ' + position;
-  return res.json(200, req.game);
-};
-
-// Delete a game from the DB.
-exports.destroy = function (req, res) {
-  if(!req.game) handleError(res, 'no passed by loadGameById');
-  return res.send(204);
-};
-
-```
-
-Il faut ensuite créer un fichier `index.js` qui sera chargé par défaut lors du chargement du module et permet de mapper les actions du controller sur les verbes HTTP et les URL :
-
-```javascript
-var express = require('express');
-var controller = require('./game.controller');
-var auth = require('../../auth/auth.service');
-var router = express.Router();
-
-router.param('id',controller.loadGameById);
-
-router.get('/', controller.index);
-router.get('/:id', controller.show);
-router.post('/', controller.create);
-router.put('/:id', controller.update);
-router.post('/:id/:position', auth.isAuthenticated(), controller.validateAndPlayTurn);
-router.delete('/:id', controller.destroy);
-
-module.exports = router;
-```
-
-La syntaxe `router.param(paramName, aFunction)` permet de dire que lorsque l'on utilisera une route contenant un paramètre `paramName`, il faudra passer par le middleware correspondant à la fonction.
-Celui ci recevra en plus des objet requête et réponse, une fonction `next` et le paramètre. Vous pourrez alors décider de rendre immédiatement la réponse ou passer la main au middleware suivant en invoquant la fonction `next`
-
-L'utilisation de `auth` permet de s'assurer que l'utilisateur est loggué et positionne ses informations dans la propriété `req.user`.
-Ce service est fourni par le générateur et utilise la librairie Passport.
-
-Il reste à indiquer à Express qu'il faut utiliser ces mappings pour les urls en `api/games/`. Dans le fichier `/server/routes.js` vous ajoutez :
-
-```javascript
-app.use('/api/games', require('./api/game'));
-```
-A noter que Express retire `/api/games/` de l'URL avant de passer le chemin au Router que vous avez déclaré.
-
-Vous pouvez maintenant tester en utilisant CURL ou un client REST.
-
-Comme on ne veux pas tester systématiquement à la main que les services REST sont fonctionnels, nous allons écrire des tests d'intégration. Pour cela nous utilisons `supertest`, une librairie proposant un DSL permettant d'écrire les tests.
-
-Pour le test de la méthode GET renvoyant la liste des parties, nous obtenons le code suivant :
-
-```javascript
-'use strict';
-
-var should = require('should');
-var app = require('../../app');
-var request = require('supertest');
-
-
-describe('GET /api/games', function() {
-
-  it('should respond with JSON array', function(done) {
-    request(app)
-      .get('/api/games')
-      .expect(200)
-      .expect('Content-Type', /json/)
-      .end(function(err, res) {
-        if (err) return done(err);
-        res.body.should.be.instanceof(Array);
-        done();
-      });
-  });
-});
-```
-Nous utilisons aussi la bibliothèque `should` qui permet d'écrire des assertions de façon plus naturelle.
+Le lancement du serveur se fait par `grunt serve`.*Attention*, un test en échec empêchera le démarrage du serveur.
+ Grunt surveillant le file system, il relancera le serveur systématiquement quand vous sauvegarderer un fichier. Le template utilisant aussi le "livereload", un changement dans les fichiers de la partie client entrainera un rechargement automatique de la page du navigateur.
 
 ## Persistence des parties
 
@@ -179,11 +59,12 @@ module.exports = _.merge(
 
 Le fichier d'initialisation de la base est `/server/config/seed.js` et contient déjà du code pour supprimer les users existants et en créer de nouveau.
 
+ *Attention* ce fichier étant exécuté à chaque démarrage du serveur, les éventuelles données de vos interactions avec l'interface seront détruites.
+
 On modifie ce fichier pour permettre la création de quelques jeux :
 ```javascript
-// ...
 var Game = require('../api/game/game.model');
-// ...
+
 Game.find({}).remove(function() {
   Game.create({
   	player1 : "Test",
@@ -220,26 +101,53 @@ Game.find({}).remove(function() {
   );
 });
 ```
-On peut ensuite modifier le code du controller pour remplacer nos méthodes bouchonnées par des vrais appels à MongoDB.
+*Attention* ne supprimer pas le code permettant l'injection des utilisateurs.
 
-Les méthodes des modèles sont asynchrones et prennent en paramètres des fonctions callback qui recevront en argument une erreur en premier paramètre et le résultat de la requête en second paramètre.
+Pour valider que l'injection se passe bien, nous pouvons utiliser le client en ligne de commande de MongoDB. Pour cela lancer un nouveau terminal et taper `mongo`. Cette commande va permettre de se connnecter au serveur Mongo tournant sur le port par défaut.
+ Ensuite vous pouvez utiliser la commande `show dbs` pour afficher la liste des bases de données existantes. 
+ Ensuite vous faites `use tictactoe-dev`puis vous pouvez utiliser `show collections` pour voir la liste des collections dans cette base.
+ Vous pouvez alors faire `db.games.find().pretty()` pour afficher les données d'une collection. Vous devriez alors voir la liste des parties déclarées dans le fichier `seed.js``
+ Pour quitter le client Mongo, vous faire `exit``
+
+## création du controller REST pour game
+Nous allons exposer via un service REST des ressources `game` qui représenteront les parties.
+Pour cela nous commençons par créer un nouveau module avec un répertoire `/server/api/game`
+
+Il faut d'abord créer un fichier `index.js` qui sera chargé par défaut lors du chargement du module et permet de mapper les actions du controller ou middleware sur les verbes HTTP et les URL :
 
 ```javascript
-// Get list of games
-exports.index = function (req, res) {
-  Game.find(function (err, games) {
-    if (err) {
-      return handleError(res, err);
-    }
-    return res.json(200, games);
-  });
-};
+var express = require('express');
+var controller = require('./game.controller');
+var auth = require('../../auth/auth.service');
+var router = express.Router();
+
+router.param('id',controller.loadGameById);
+
+router.get('/', controller.index);
+router.get('/:id', controller.show);
+router.post('/', controller.create);
+router.put('/:id', controller.update);
+router.post('/:id/:position', auth.isAuthenticated(), controller.validateAndPlayTurn);
+router.delete('/:id', controller.destroy);
+
+module.exports = router;
 ```
-Vous pouvez alors retester votre service et vérifié que vous recevez bien la liste des parties que vous avez initialisé dans le fichier `/server/config/seed.js`
+La syntaxe `router.param(paramName, aFunction)` permet de dire que lorsque l'on utilisera une route contenant un paramètre `paramName`, il faudra passer par le middleware correspondant à la fonction.
+Celui ci recevra en plus des objets requête et réponse, une fonction `next` et le paramètre. Vous pourrez alors décider de rendre immédiatement la réponse ou passer la main au middleware suivant en invoquant la fonction `next`.
+ Cette syntaxe nous permet de n'avoir qu'une seule fois le code pour la recherche d'une partie et la gestion des erreurs associées (500 ou 404).
 
-Vous pouvez alors faire la suite des modifications :
+L'utilisation de `auth` permet de s'assurer que l'utilisateur est loggué et positionne ses informations dans la propriété `req.user`.
+Ce service est fourni par le générateur et utilise la librairie Passport.
+
+Puis nous créeons un fichier `game.controller.js` qui sera le controller
 
 ```javascript
+// handle the 500 reply in case of error.
+function handleError(res, err) {
+  return res.send(500, err);
+}
+
+//load the current game and call next middleware or return 404 if not found
 //load the current game and call next middleware or return 404 if not found
 exports.loadGameById = function (req, res, next, id) {
   var query = Game.findById(id);
@@ -256,7 +164,16 @@ exports.loadGameById = function (req, res, next, id) {
   });
 };
 
-// ....
+
+// Get list of games
+exports.index = function (req, res) {
+  Game.find(function (err, games) {
+    if (err) {
+      return handleError(res, err);
+    }
+    return res.json(200, games);
+  });
+};
 
 // Get a single game
 exports.show = function (req, res) {
@@ -297,8 +214,59 @@ exports.destroy = function (req, res) {
   });
 };
 ```
+Les méthodes des modèles Mongoose sont asynchrones et prennent en paramètres des fonctions callback qui recevront en argument une erreur en premier paramètre et le résultat de la requête en second paramètre.
 
-Il est alors possible de refaire des tests pour vérifier que l'on écrit bien dans la base MongoDB.
+Il reste à indiquer à Express qu'il faut utiliser ces mappings pour les urls en `api/games/`. Dans le fichier `/server/routes.js` vous ajoutez le code suivant :
+
+```javascript
+app.use('/api/games', require('./api/game'));
+```
+*Attention* la résolution des routes parcourent la liste et s'arrête sur la première qui correspond, vous devez ajouter ce code avant la section : 
+
+```javascript
+  app.route('/:url(api|auth|components|app|bower_components|assets)/*')
+   .get(errors[404]);
+
+```
+
+A noter que Express retire `/api/games/` de l'URL avant de passer le chemin au Router que vous avez déclaré.
+
+Vous pouvez maintenant tester en utilisant CURL ou un client REST.
+
+Comme on ne veux pas tester systématiquement à la main que les services REST sont fonctionnels, nous allons écrire des tests d'intégration. Pour cela nous utilisons `supertest`, une librairie proposant un DSL permettant d'écrire les tests.
+
+Pour l'exécution des tests, le générateur a configurer Grunt pour considérer tout fichier respectant le pattern `xxxxxxxxx.spec.js` comme un fichier de test. Vous pouvez donc créer votre fichier sous le nom `main.controller.spec.js` 
+
+Pour le test de la méthode GET renvoyant la liste des parties, nous obtenons le code suivant pour vérifier que la méthode nous renvoie bien un code 200 avec un body en  JSON contenant un tableau  :
+
+```javascript
+'use strict';
+
+var should = require('should');
+var app = require('../../app');
+var request = require('supertest');
+
+
+describe('GET /api/games', function() {
+
+  it('should respond with JSON array', function(done) {
+    request(app)
+      .get('/api/games')
+      .expect(200)
+      .expect('Content-Type', /json/)
+      .end(function(err, res) {
+        if (err) return done(err);
+        res.body.should.be.instanceof(Array);
+        done();
+      });
+  });
+});
+```
+Nous utilisons aussi la bibliothèque `should` qui permet d'écrire des assertions de façon plus naturelle.
+
+Vous pouvez aussi tester votre service en appelant l'URL `http://localhost:9000/api/games` et vérifier que vous recevez bien la liste des parties que vous avez initialisé dans le fichier `/server/config/seed.js`. Vous pouvez faire un second test sur l'URL `http://localhost:9000/api/game/UN_ID` où `UN_ID` sera la valeur d'un des `_id` des games affichés précédemment.
+
+Il est alors possible de refaire quelques tests dans un navigateur ou client REST pour vérifier que l'on écrit bien dans la base MongoDB.
 
 ## Affichage des parties en cours
 
@@ -314,7 +282,7 @@ Le main.html va être séparé en deux sections aux responsabilités suivantes :
 
 Nous nous concentrons pour le moment sur la récupération des données `games` coté client.
 
-Nous créons un service angularjs `Game` qui va récupérer les données avec NgResource.  
+Nous avons créé un service angularjs `Game` qui va récupérer les données avec NgResource dans le fichier `/client/component/game.service.js`.  
 
 ```javascript
 .factory('Game', ['$resource', function ($resource) {
@@ -364,11 +332,13 @@ Nous devons maintenant connecter nos données venant du back vers notre vue. Dan
 
 ```javascript
 angular.module('ticTacToeApp')
-  .controller('MainCtrl', ['$scope', 'games', function ($scope, games) {
+  .controller('MainCtrl', ['$scope', 'games', 'GameState',  function ($scope, games, GameState) {
 
       var main = this;
       main.games = games;
-
+      
+      $scope.GameState = GameState;
+      main.stateFilter = GameState.NOT_OVER;
     }]);
 
 ```
@@ -390,7 +360,7 @@ Nous modifions la vue afin d'afficher notre liste de jeux. On utilise ici un `ng
 
 ```
 
-## creation d'une partie dans le back
+## création d'une partie dans le back
 
 Nous allons maintenant voir comment nous pouvons créer une partie dans le backend.
 
@@ -398,7 +368,7 @@ L'objet Game étant créé dans le front, nous n'avons rien de plus à faire que
 
 La méthode `Game.create` fera une correspondance entre les propriétés de l'objet passé dans le body de la requête et celle déclarées dans le mapping.
 
-## creation d'une partie dans le front
+## création d'une partie dans le front
 
 Nous allons ici donner la possibilité à l'utilisateur connecté de créer une nouvelle partie.
 
@@ -567,8 +537,10 @@ Une fois les events émis coté serveur, il faut désormais les traiter coté cl
 Coté client, notre stack utilise une librairie "angularifiée" de `socket.io` .
 
 Nous créons une factory qui va permettre d'initialiser une connection client socket.io et brancher nos différents messages venant du serveur.
+Dans un fichier `/client/component/socket/socket.service.js` nous ajoutons le code suivant : 
 
 ```javascript
+angular.module('ticTacToeApp')
 .factory('socket', ['socketFactory', 'Game', '$rootScope',
     function (socketFactory, Game, $rootScope) {
 
@@ -605,8 +577,9 @@ Nous créons une factory qui va permettre d'initialiser une connection client so
         socket.on('game:create', function (game) {
           games.push(new Game(game));
         });
-      })
-    };
+      }}
+    }
+]);
 ```
 
 Sur l'événement 'game:save', nous cherchons le jeu modifié dans la liste des jeux puis nous appliquons les modifications à cet instance de jeu puis nous effectuons un broadcast sur le $rootscope pour avertir de la modification coté client.
@@ -622,7 +595,7 @@ Sur l'événement 'game:create', nous créons une nouvelle ressource Game à par
 
 Pour jouer un coup l'application utilise l'URL `/api/game/:id/:position` définie dans le fichier `/server/api/game/index.js`.
 
-Cette route passe possède un paramètre supplémentaire qui permet de rejeter l'accès si l'utilisateur n'est pas authentifié. Cet appel permet aussi l'ajout de la propriété `user`sur l'objet request.
+Cette route possède un paramètre supplémentaire qui permet de rejeter l'accès si l'utilisateur n'est pas authentifié. Cet appel permet aussi l'ajout de la propriété `user`sur l'objet request.
 A noter que comme l'URL est au format `/:id` les requêtes passeront aussi par le middleware param qui accroche la partie sur l'objet request.
 
 Pour cette fonctionnalité, nous fournissons une librairie qui s'occupe de la validation si le coup est possible et du changement d'état du jeu. La fonction à invoquer prend un callback qui recevra l'éventuelle erreur ou le nouvel état du jeu.
@@ -779,7 +752,7 @@ describe('Game View', function() {
     element(by.linkText('Login')).click();
     element(by.model('user.email')).sendKeys('test@test.com');
     element(by.model('user.password')).sendKeys('test');
-    element(by.buttonText('Login')).click();
+    element(by.buttonText('Lomein')).click();
     element.all(by.repeater("game in games")).count().then(function(data){
       countBefore = data;
       element(by.buttonText('Créer partie')).click();
