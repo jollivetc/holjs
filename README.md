@@ -20,6 +20,18 @@ Créez un fichier `/server/api/game/game.model.js`
 ```javascript
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
+    
+var GameState = {
+  OVER: "Over",
+  PENDING: "Pending",
+  OPENED: "Opened"
+};
+
+var GameConst = {
+  signEmpty: '_',
+  signPlayer: {'1': 'X', '2': 'O'}
+};
+GameConst.emptyBoard = new Array(10).join(GameConst.signEmpty);
 /**
  * Schema Game
  *
@@ -28,15 +40,18 @@ var mongoose = require('mongoose'),
 var GameSchema = new Schema({
   player1: String,
   player2: String,
-  stateBoard: { type: String, default: "_________" },
-  stateGame: { type: String, default: "Opened" },
+  stateBoard: { type: String, default: GameConst.emptyBoard },
+  stateGame: { type: String, default: GameState.OPENED },
   winner: String,
   turnPlayer: { type: Number, default: 1 }
 });
 
+
 var Game = mongoose.model('Game', GameSchema);
 
-module.exports = Game;
+module.exports.Game = Game;
+module.exports.GameState = GameState;
+module.exports.GameConst = GameConst;
 ```
 
 Vous allez commencer à utiliser ce modèle pour initialiser des données dans la base.
@@ -107,13 +122,13 @@ Pour valider que l'injection se passe bien, nous pouvons utiliser le client en l
  Ensuite vous pouvez utiliser la commande `show dbs` pour afficher la liste des bases de données existantes. 
  Ensuite vous faites `use tictactoe-dev`puis vous pouvez utiliser `show collections` pour voir la liste des collections dans cette base.
  Vous pouvez alors faire `db.games.find().pretty()` pour afficher les données d'une collection. Vous devriez alors voir la liste des parties déclarées dans le fichier `seed.js``
- Pour quitter le client Mongo, vous faire `exit``
+ Pour quitter le client Mongo, vous faire `exit`
 
 ## création du controller REST pour game
 Nous allons exposer via un service REST des ressources `game` qui représenteront les parties.
 Pour cela nous commençons par créer un nouveau module avec un répertoire `/server/api/game`
 
-Il faut d'abord créer un fichier `index.js` qui sera chargé par défaut lors du chargement du module et permet de mapper les actions du controller ou middleware sur les verbes HTTP et les URL :
+Il faut d'abord créer un fichier `/server/api/game/index.js` qui sera chargé par défaut lors du chargement du module et permet de mapper les actions du controller ou middleware sur les verbes HTTP et les URL :
 
 ```javascript
 var express = require('express');
@@ -142,6 +157,11 @@ Ce service est fourni par le générateur et utilise la librairie Passport.
 Puis nous créeons un fichier `game.controller.js` qui sera le controller
 
 ```javascript
+var _ = require('lodash');
+var Game = require('./game.model').Game;
+var GameState = require('./game.model').GameState;
+var ruleServiceGame = require('./game.service');
+
 // handle the 500 reply in case of error.
 function handleError(res, err) {
   return res.send(500, err);
@@ -603,8 +623,6 @@ Pour cette fonctionnalité, nous fournissons une librairie qui s'occupe de la va
 Vous devez ajouter le code suivant dans le controller
 
 ```javascript
-var ruleServiceGame = require('./game.service');
-
 
 // Validate and play turn
 exports.validateAndPlayTurn = function (req, res) {
@@ -653,7 +671,7 @@ describe('game management', function(){
 
     gameService.validateAndPlayTurn(game, 5, 'Bob', spy);
 
-    sinon.assert.calledWith(spy, "Impossible de jouer sur cette case.");
+    sinon.assert.calledWith(spy, "Impossible de jouer sur cette case. X - _____X___ - 5");
   })
 
 });
@@ -666,13 +684,14 @@ Nous créons un sous-état particulier afin d'afficher le plateau de jeu et les 
 
 Le sous-état `main.gameboard` est ajouté au fichier `client/app/main/main.js`
 
- ```javascript
+```javascript
  .state('main.gameboard', {
    url: 'gameboard/:idGame',
    templateUrl: 'app/game/gameboard.html',
    controller: 'GameboardCtrl as vm'
- })
- ```
+ });
+ 
+```
 
  La directive du plateau de jeu qui sera à inclure dans le gameboard.html est complétement fournie (voir code source de la directive dans `client/app/game/gameboard.directive.js`).
 
