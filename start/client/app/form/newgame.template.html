@@ -7,8 +7,9 @@
   </div>
 
   <div class="panel-body">
-    <div ng-if="userConnected && !gameCreated">
 
+    <!-- Formulaire de création -->
+    <div ng-if="userConnected">
       <div class="form-group">
         <input class="pull-left" style="margin: 5px 10px 5px 5px;" type="checkbox"
                ng-model="newGame.turnPlayer" ng-true-value="1" ng-false-value="2"/>
@@ -18,17 +19,14 @@
         <button class="btn btn-primary" type="button" ng-click="validateNewGame()">Valider</button>
       </div>
     </div>
-    <div ng-if="gameCreated">
 
-      <alert  type="success">Vous venez de créer une partie</alert>
-      <button class="btn btn-primary" type="button" ng-click="display()">Ok</button>
- 
-    </div>
+    <!-- Erreur si non connecté -->
     <div ng-if="!userConnected">
       <div>
         Vous devez être connecté pour créer une partie.
       </div>
     </div>
+
   </div>
 
 </div>
