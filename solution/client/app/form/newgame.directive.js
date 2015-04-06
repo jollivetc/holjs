@@ -19,16 +19,16 @@ angular.module('ticTacToeApp')
 
       $scope.validateNewGame = function () {
 
-        $scope.newGame = Game.save($scope.newGame)
-          .$promise.then(function (createdGame) {
-            // Wait game list update before display board
-            $timeout(
-              function () {
-                $state.go('main.gameboard', {idGame: createdGame._id});
-              },
-              50
-            );
-          });
+        Game.save($scope.newGame)
+            .$promise.then(function (createdGame) {
+              // Wait game list update before display board
+              $timeout(
+                function () {
+                  $state.go('main.gameboard', {idGame: createdGame._id});
+                },
+                50
+              );
+            });
       };
 
     }])

@@ -190,8 +190,7 @@ exports.loadGameById = function (req, res, next, id) {
 // Get list of games
 exports.index = function (req, res) {
   Game.find()
-      .where('stateGame')
-      .ne(GameState.OVER)
+      .where('stateGame').ne(GameState.OVER) // Only pending games
       .exec(function (err, games) {
         if (err) {
           return handleError(res, err);
@@ -454,16 +453,16 @@ angular.module('ticTacToeApp')
 
       $scope.validateNewGame = function () {
 
-        $scope.newGame = Game.save($scope.newGame)
-          .$promise.then(function (createdGame) {
-            // Wait game list update before display board
-            $timeout(
-              function () {
-                $state.go('main.gameboard', {idGame: createdGame._id});
-              },
-              50
-            );
-          });
+        Game.save($scope.newGame)
+            .$promise.then(function (createdGame) {
+              // Wait game list update before display board
+              $timeout(
+                function () {
+                  $state.go('main.gameboard', {idGame: createdGame._id});
+                },
+                50
+              );
+            });
       };
 
     }])

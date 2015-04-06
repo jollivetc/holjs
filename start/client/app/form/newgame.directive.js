@@ -19,7 +19,7 @@ angular.module('ticTacToeApp')
 
       $scope.validateNewGame = function () {
 
-        $scope.newGame = Game.save($scope.newGame)
+        Game.save($scope.newGame)
             .$promise.then(function (createdGame) {
               // Wait game list update before display board
               $timeout(
