@@ -10,7 +10,7 @@ angular.module('ticTacToeApp')
   .constant('player2', '2')
   .constant('GameState', { PENDING: 'Pending', OVER: 'Over', WAITING: 'Opened', NOT_OVER: '!Over' })
 
-  // Game ressource ajax rest access
+  // Step 3 - factory à insérer ici - Ajout du service Game utilisant NgRessource ( ajax rest access ) 
   .factory('Game', ['$resource', 'Auth', 'GameState', function ($resource, Auth, GameState) {
 
     var game;
@@ -52,7 +52,7 @@ angular.module('ticTacToeApp')
 
     return game;
   }])
-
+  // Service portant la logique front du jeu.
   .factory('GameLogic', [ 'Game', 'GameState', function (Game, GameState) {
 
     function GameLogic(gameData, player) {

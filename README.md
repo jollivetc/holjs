@@ -3,13 +3,15 @@
 ## Introduction aux outils
 Pour cet exercice nous allons utiliser une variante du code obtenu par le générateur Angular Fullstack disponible dans Yeoman.
 
+Le générateur utilisé est disponible à l'adresse : <https://github.com/DaftMonk/generator-angular-fullstack>
+
 Pour exécuter les tests, vous utiliserez la commande `grunt test`.
 Les tests pour la partie client sont visibles à la fin du log qui défile, ceux de la partie serveur sont au milieu du log, vous devrez scroller vers le haut.
 
 Le lancement du serveur se fait par `grunt serve`.*Attention*, un test en échec empêchera le démarrage du serveur.
  Grunt surveillant le file system, il relancera le serveur systématiquement quand vous sauvegarderer un fichier. Le template utilisant aussi le "livereload", un changement dans les fichiers de la partie client entrainera un rechargement automatique de la page du navigateur.
 
-## Persistence des parties
+## Step 1 : Persistence des parties
 
 Pour l'accès à la base de données, nous utilisons Mongoose qui permet de simplifier l'interaction avec MongoDB.
 
@@ -122,9 +124,9 @@ Pour valider que l'injection se passe bien, nous pouvons utiliser le client en l
  Ensuite vous pouvez utiliser la commande `show dbs` pour afficher la liste des bases de données existantes. 
  Ensuite vous faites `use tictactoe-dev`puis vous pouvez utiliser `show collections` pour voir la liste des collections dans cette base.
  Vous pouvez alors faire `db.games.find().pretty()` pour afficher les données d'une collection. Vous devriez alors voir la liste des parties déclarées dans le fichier `seed.js``
- Pour quitter le client Mongo, vous faire `exit`
+ Pour quitter le client Mongo, vous faites `exit`.
 
-## création du controller REST pour game
+## Step 2 : création du controller REST pour game
 Nous allons exposer via un service REST des ressources `game` qui représenteront les parties.
 Pour cela nous commençons par créer un nouveau module avec un répertoire `/server/api/game`
 
@@ -288,7 +290,7 @@ Vous pouvez aussi tester votre service en appelant l'URL `http://localhost:9000/
 
 Il est alors possible de refaire quelques tests dans un navigateur ou client REST pour vérifier que l'on écrit bien dans la base MongoDB.
 
-## Affichage des parties en cours
+## Step 3 : Affichage des parties en cours
 
 La partie front a été généré dans le repertoire `client`. La navigation dans angularJs va être gérée par `ui-router`. Le fichier `client/index.html` est le fichier principal de la partie cliente qui intégrera le state principal.
 
@@ -302,11 +304,13 @@ Le main.html va être séparé en deux sections aux responsabilités suivantes :
 
 Nous nous concentrons pour le moment sur la récupération des données `games` coté client.
 
-Nous avons créé un service angularjs `Game` qui va récupérer les données avec NgResource dans le fichier `/client/component/game.service.js`.  
+Nous avons créé un service angularjs `Game` qui va récupérer les données avec NgResource dans le fichier `/client/components/game/game.service.js`.  
 
 ```javascript
-.factory('Game', ['$resource', function ($resource) {
+.factory('Game', ['$resource', 'Auth', 'GameState', function ($resource, Auth, GameState) {
+
     var game;
+
     game = $resource(
       '/api/games/:id',
       {
@@ -322,14 +326,34 @@ Nous avons créé un service angularjs `Game` qui va récupérer les données av
         getAll: {
           method: 'GET',
           isArray: true
+        },
+        playTurn: {
+          method: 'POST',
+          url: '/api/games/:id/:position'
+        },
+        getScores: {
+          method: 'GET',
+          url: '/api/users/scores/10',
+          isArray: true
         }
       });
+    game.prototype.canJoin = function () {
+      return angular.isDefined(Auth.getCurrentUser().name) &&
+        this.stateGame === GameState.WAITING && this.player1 !== Auth.getCurrentUser().name;
+    };
+
+    game.prototype.canTrash = function () {
+      return (this.player1 === Auth.getCurrentUser().name && this.stateGame === GameState.WAITING)|| this.stateGame === GameState.OVER;
+    };
+
+    return game;
+  }])
 ```
 
-Nous utilsons la méthode 'getAll' pour récupérer tous les jeux disponibles.
+Nous utilisons la méthode 'getAll' pour récupérer tous les jeux disponibles.
 Afin de gérer les problématiques d'asynchronisme, nous allons appeler ce service au sein d'un attribut resolve du state `main` puisque resolve attend la résolution d'éventuelle Promise.
 
-voici le fichier `main/main.js` :
+voici le fichier `client/app/main/main.js` :
 
 ```javascript
 angular.module('ticTacToeApp')
@@ -344,7 +368,7 @@ angular.module('ticTacToeApp')
         },
         controller: 'MainCtrl as main'
       });
-
+     // Autres states à ajouter au $stateProvider içi plus tard dans Step 5 et Step 8
   });
 ```
 
@@ -363,7 +387,7 @@ angular.module('ticTacToeApp')
 
 ```
 
-Nous modifions la vue afin d'afficher notre liste de jeux. On utilise ici un `ng-repeat` .  
+Nous modifions la vue afin d'afficher notre liste de jeux dans le fichier `main.html`. On utilise ici un `ng-repeat` .  
 
 ```html
 <div class="panel-body">
@@ -380,7 +404,7 @@ Nous modifions la vue afin d'afficher notre liste de jeux. On utilise ici un `ng
 
 ```
 
-## création d'une partie dans le back
+## Step 4 : Création d'une partie dans le back
 
 Nous allons maintenant voir comment nous pouvons créer une partie dans le backend.
 
@@ -388,11 +412,11 @@ L'objet Game étant créé dans le front, nous n'avons rien de plus à faire que
 
 La méthode `Game.create` fera une correspondance entre les propriétés de l'objet passé dans le body de la requête et celle déclarées dans le mapping.
 
-## création d'une partie dans le front
+## Step 5 : Création d'une partie dans le front
 
 Nous allons ici donner la possibilité à l'utilisateur connecté de créer une nouvelle partie.
 
-Nous allons donc ajouter un sous état à l'état parent `main` : `main.creategame` dans `main/main.js`.
+Nous allons donc ajouter un sous-état à l'état parent `main` : `main.creategame` dans `main/main.js`.
 
 ```javascript
 
@@ -464,11 +488,11 @@ angular.module('ticTacToeApp')
   }]);
 ```
 
-Il restera à implemeter le sous état `main.gameboard` dans lequelle on affichera le plateau de jeu.
+Il restera à implementer le sous état `main.gameboard` dans lequelle on affichera le plateau de jeu.
 
-## Communication via les websockets
+## Step 6 : Communication via les websockets
 
-### Dans le back end
+### 6.1 : Dans le back end
 
 Afin de pouvoir communiquer entre les différents clients, nous allons utiliser des sockets. Elles permettront de pousser vers les clients les créations / fins de parties ainsi que les coups joués par les joueurs.
 
@@ -550,16 +574,18 @@ A partir de ce moment, un message est envoyé sur la socket lorsque nous émetto
 
 A noter que nous aurions pu utiliser des Middlewares sur le Schema qui propose des "hook" sur les post save et remove mais ceux-ci n'auraient pas permis de faire la différence entre un update et une création.
 
-### Socket coté Front
+### 6.2 : Socket coté Front
 
 Une fois les events émis coté serveur, il faut désormais les traiter coté client.
 
-Coté client, notre stack utilise une librairie "angularifiée" de `socket.io` .
+Coté client, notre stack utilise une librairie "angularifiée" de `socket.io` . Si vous désirez plus de détails voici l'url du projet : <https://github.com/btford/angular-socket-io>
 
 Nous créons une factory qui va permettre d'initialiser une connection client socket.io et brancher nos différents messages venant du serveur.
-Dans un fichier `/client/component/socket/socket.service.js` nous ajoutons le code suivant : 
+Dans un fichier `/client/components/socket/socket.service.js` nous ajoutons le code suivant : 
 
 ```javascript
+'use strict';
+
 angular.module('ticTacToeApp')
 .factory('socket', ['socketFactory', 'Game', '$rootScope',
     function (socketFactory, Game, $rootScope) {
@@ -609,9 +635,9 @@ Sur l'événement 'game:remove', nous supprimons le jeu reçu du serveur de la l
 Sur l'événement 'game:create', nous créons une nouvelle ressource Game à partir du jeu reçu du serveur et l'ajoutons à la liste des jeux.
 
 
-## jouer un coup dans le coté serveur
+## Step 7 : Jouer un coup dans le coté serveur
 
-### écriture la fonctionnalité
+### 7.1 : Ecriture la fonctionnalité
 
 Pour jouer un coup l'application utilise l'URL `/api/game/:id/:position` définie dans le fichier `/server/api/game/index.js`.
 
@@ -648,7 +674,7 @@ exports.validateAndPlayTurn = function (req, res) {
 Nous invoquons la méthode `validateAndPlayTurn` en lui donnant le jeu, la position jouée, le nom du joueur et une fonction de callback.
   Le callback est invoqué avec une erreur si la position est déjà jouée, sinon on nous renvoie le jeu mis à jour. Nous faisons alors une sauvegarde et emettons un évènement pour que l'information soit émise via la websocket.
 
-### Test unitaire sur la librairie
+### 7.2 : Test unitaire sur la librairie
 
 Nous avions écrit un test d'intégration pour les services REST en utilisant la librairie `supertest`. Pour les tests unitaires, le générateur fourni `mocha` pour l'écriture des tests et `sinon`pour l'écriture des mocks ou spies.
   Vous pouvez donc créer un fichier `/server/api/game/gameTU.spec.js` dans lequel vous mettez le code suivant permettant de vérifier que la bibliothèque renvoie une erreur si le coup n'est pas jouable :
@@ -678,11 +704,11 @@ describe('game management', function(){
 ```
 
 
-## Intégration de la directive du gameboard
+## Step 8 : Intégration de la directive du gameboard
 
 Nous créons un sous-état particulier afin d'afficher le plateau de jeu et les informations associées au jeu courant.
 
-Le sous-état `main.gameboard` est ajouté au fichier `client/app/main/main.js`
+Le sous-état `main.gameboard` est à ajouter au fichier `client/app/main/main.js`
 
 ```javascript
  .state('main.gameboard', {
@@ -750,7 +776,7 @@ Le sous-état `main.gameboard` est ajouté au fichier `client/app/main/main.js`
 
  A ce stade, si nous nous connectons en tant que l'utilisateur 'Test' nous sommes capable de jouer un coup.
 
-## Protractor
+## Step 9 : Protractor
 
 Protractor est une évolution de Selenium qui est "AngularJS Aware". C'est à dire qu'il possède un ensemble de selecteur spécifique aux directives d'Angular (modèle, binding, iteration) et est capable d'attendre la stabilisation de l'application avant d'exécuter la commande suivante.
   Le générateur a créé pour nous les fichiers de configuration nécessaires avec le fichier `/protractor.conf.js`, la configuration dans le fichier `/Gruntfile.js` ainsi qu'un répertoire `/e2e`pour les tests.
@@ -782,9 +808,9 @@ describe('Game View', function() {
   });
 });
 ```
-Dans ce test, nous commençons par nous logguer dans l'application en tant qu'utilisateur "test", puis nous comptons le nombre de partie en cours. Après cela nous créons une nouvelle partie est comptons de nouveau le nombre de partie en cours et vérifions qu'il y en a une de plus.  
+Dans ce test, nous commençons par nous logguer dans l'application en tant qu'utilisateur "test", puis nous comptons le nombre de partie en cours. Après cela nous créons une nouvelle partie et comptons de nouveau le nombre de partie en cours et vérifions qu'il y en a une de plus.  
 
-## OAuth
+## Step 10 :  OAuth
 
 Nous allons mettre en place l'authentification OAuth 2.0 via google. Si vous avez choisi Google comme fournisseur d'authentification à la génération du projet, le générateur Fullstack-Angular a créé l'habillage autour de cette authentification.
 
@@ -813,7 +839,17 @@ module.exports = router;
 
 ```
 
-Il faut donc ajouter à l'objet `config` les paramètres Oauth google . Les paramètres d'authentification doivent être créés depuis la console développeur de Google.
+Il faut donc ajouter à l'objet `config` les paramètres Oauth google . Les paramètres d'authentification doivent être créés depuis la console développeur de Google :  <https://console.developers.google.com> .
+  
+  Etape à effectuer en dehors de l'atelier ( Durant l'atelier, nous pourrons vous fournir les clés générées pour l'occasion ):
+      - Créer un projet dans la console
+      - Aller dans le tableau de bord du projet en cliquant sur le projet créé.
+      - Aller dans le menu API et Authentification puis le sous menu Identifiants.
+      - Cliquer sur le bouton "Créer un identifiant client" dans la partie Oauth.
+      - Choisir Type d'application Web.
+      - Remplir les champs obligatoire sur l'écran suivant puis valider.
+      - Choisir les urls autorisées à accéder à l'authentification et l'url de callback de votre application puis cliquer sur Créer Identifiant.
+      - Vous avez maintenant toutes les informations pour effectuer une authentification OAuth depuis google.
 
 Trois informations sont nécessaires :
 * clientID: ID associé à l'application ( généré et fourni par google pour votre application )
@@ -835,7 +871,7 @@ google: {
 Nous testons donc que l'authentifcation via Google fonctionne.
 
 
-## Top10
+## Step 11 : Top10
 
 ### Modification du coté server
 Pour le top 10, nous allons avoir deux modifications à faire du coté du serveur :
