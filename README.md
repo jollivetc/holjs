@@ -842,14 +842,15 @@ module.exports = router;
 Il faut donc ajouter à l'objet `config` les paramètres Oauth google . Les paramètres d'authentification doivent être créés depuis la console développeur de Google :  <https://console.developers.google.com> .
   
   Etape à effectuer en dehors de l'atelier ( Durant l'atelier, nous pourrons vous fournir les clés générées pour l'occasion ):
-      * Créer un projet dans la console
-      * Aller dans le tableau de bord du projet en cliquant sur le projet créé.
-      * Aller dans le menu API et Authentification puis le sous menu Identifiants.
-      * Cliquer sur le bouton "Créer un identifiant client" dans la partie Oauth.
-      * Choisir Type d'application Web.
-      * Remplir les champs obligatoire sur l'écran suivant puis valider.
-      * Choisir les urls autorisées à accéder à l'authentification et l'url de callback de votre application puis cliquer sur Créer Identifiant.
-      * Vous avez maintenant toutes les informations pour effectuer une authentification OAuth depuis google.
+
+  * Créer un projet dans la console
+  * Aller dans le tableau de bord du projet en cliquant sur le projet créé.
+  * Aller dans le menu API et Authentification puis le sous menu Identifiants.
+  * Cliquer sur le bouton "Créer un identifiant client" dans la partie Oauth.
+  * Choisir Type d'application Web.
+  * Remplir les champs obligatoire sur l'écran suivant puis valider.
+  * Choisir les urls autorisées à accéder à l'authentification et l'url de callback de votre application puis cliquer sur Créer Identifiant.
+  * Vous avez maintenant toutes les informations pour effectuer une authentification OAuth depuis google.
 
 Trois informations sont nécessaires :
 * clientID: ID associé à l'application ( généré et fourni par google pour votre application )
