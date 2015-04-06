@@ -28,13 +28,14 @@ exports.loadGameById = function (req, res, next, id) {
 
 // Get list of games
 exports.index = function (req, res) {
-  Game.find().where('stateGame').ne(GameState.OVER)
-    .exec(function (err, games) {
-    if (err) {
-      return handleError(res, err);
-    }
-    return res.json(200, games);
-  });
+  Game.find()
+      .where('stateGame').ne(GameState.OVER) // Only pending games
+      .exec(function (err, games) {
+        if (err) {
+          return handleError(res, err);
+        }
+        return res.json(200, games);
+      });
 };
 
 // Validate and play turn

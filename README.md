@@ -189,12 +189,15 @@ exports.loadGameById = function (req, res, next, id) {
 
 // Get list of games
 exports.index = function (req, res) {
-  Game.find(function (err, games) {
-    if (err) {
-      return handleError(res, err);
-    }
-    return res.json(200, games);
-  });
+  Game.find()
+      .where('stateGame')
+      .ne(GameState.OVER)
+      .exec(function (err, games) {
+        if (err) {
+          return handleError(res, err);
+        }
+        return res.json(200, games);
+      });
 };
 
 // Get a single game
@@ -733,7 +736,6 @@ Le sous-état `main.gameboard` est à ajouter au fichier `client/app/main/main.j
     vm.gameLogic = new GameLogic(vm.activeGame, vm.localPlayer);
 
     // Play turn from directive
-
     vm.playTurnRequest = function (cell) {
       if (vm.localPlayer !== undefined) {
         vm.message = vm.gameLogic.playTurn(cell.index);
