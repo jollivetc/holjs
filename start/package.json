@@ -57,6 +57,7 @@
     "grunt-open": "~0.2.3",
     "grunt-protractor-runner": "^1.1.0",
     "grunt-rev": "~0.1.0",
+    "grunt-sass": "^0.18.1",
     "grunt-svgmin": "~0.4.0",
     "grunt-usemin": "~2.1.1",
     "grunt-wiredep": "~1.8.0",
@@ -82,7 +83,7 @@
     "open": "~0.0.4",
     "requirejs": "~2.1.11",
     "should": "~3.3.1",
-    "sinon":"~1.14.1",
+    "sinon": "~1.14.1",
     "supertest": "~0.11.0",
     "time-grunt": "~0.3.1"
   },

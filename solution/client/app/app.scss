@@ -1,8 +1,8 @@
 $icon-font-path: "/bower_components/bootstrap-sass-official/vendor/assets/fonts/bootstrap/";
 $fa-font-path: "/bower_components/font-awesome/fonts";
 
-@import 'bootstrap-sass-official/vendor/assets/stylesheets/bootstrap';
-@import 'font-awesome/scss/font-awesome';
+@import '../bower_components/bootstrap-sass-official/vendor/assets/stylesheets/bootstrap';
+@import '../bower_components/font-awesome/scss/font-awesome';
 
 /**
  * App-wide Styles
@@ -21,5 +21,5 @@ $fa-font-path: "/bower_components/font-awesome/fonts";
 @import 'admin/admin.scss';
 @import 'game/game.scss';
 @import 'main/main.scss';
-@import 'modal/modal.scss';
+@import '../components/modal/modal.scss';
 // endinjector
