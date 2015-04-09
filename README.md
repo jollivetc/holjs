@@ -502,6 +502,15 @@ angular.module('ticTacToeApp')
   }]);
 ```
 
+Le bouton permettant de créer étant déjà dans la vue, il nous reste à ajouter la méthode permettant d'aller vers l'état "CreateGame".
+
+```javascript
+main.createGame = function() {
+  $state.go('main.creategame'); // Penser à injecter le $state dans la fonction du controller
+}
+ 
+```
+
 Il restera à implementer le sous état `main.gameboard` dans lequelle on affichera le plateau de jeu.
 
 ## Step 6 : Communication via les websockets
@@ -648,6 +657,12 @@ Sur l'événement 'game:remove', nous supprimons le jeu reçu du serveur de la l
 
 Sur l'événement 'game:create', nous créons une nouvelle ressource Game à partir du jeu reçu du serveur et l'ajoutons à la liste des jeux.
 
+Afin de manager la liste de jeux avec socket.io , nous devons lui fournir au travers du mainController:
+
+```javascript
+socket.manageGames(games); // Injecter notre factory socket dans le controller !!!!!!!
+```
+
 
 ## Step 7 : Jouer un coup dans le coté serveur
 
@@ -735,6 +750,17 @@ Le sous-état `main.gameboard` est à ajouter au fichier `client/app/main/main.j
 
  La directive du plateau de jeu qui sera à inclure dans le gameboard.html est complétement fournie (voir code source de la directive dans `client/app/game/gameboard.directive.js`).
 
+ Cependant, à la sélection d'une partie, il faut switcher vers cet état avec le bon contexte.
+ Nous ajoutons la méthode `select` dans le 'MainCtrl':   
+ ```javascript
+main.select= function(game) {
+  $state.go('main.gameboard', {idGame: game._id});
+}
+ 
+```
+
+
+
  Nous allons coder maintenant le `GameboardCtrl` et cabler la directive à notre controller de l'état. De plus, nous fournissons aussi un service `GameLogic` qui contient la logique du jeu.
 
  Notre controller ressemble à :
@@ -788,6 +814,28 @@ Le sous-état `main.gameboard` est à ajouter au fichier `client/app/main/main.j
  * vm.message : le message à afficher en fonction de l'état du jeu.
 
  A ce stade, si nous nous connectons en tant que l'utilisateur 'Test' nous sommes capable de jouer un coup.
+
+ Cependant, sur les créations de partie, il nous est impossible de rejoindre une partie. Nous ajoutons un bouton pour permettre à l'utilisateur de rejoindre une partie.
+
+ Dans le fichier `client/app/main/main.html` :
+ ```html
+  <button class="btn btn-primary btn-xs btn-success" ng-show="game.canJoin()" ng-click="main.join(game)" type="button">
+                  Joindre
+  </button>
+ ```
+
+ puis la fonction qui va permettre de rejoindre la partie dans le controller du main :
+
+```javascript
+ main.join = function (game) {
+        game.player2 = Auth.getCurrentUser().name;
+        game.stateGame = GameState.PENDING;
+        game.$update();
+        $state.go('main.gameboard', {idGame: game._id});
+      };
+```
+
+Nous vous laissons coder chez vous la fonctionnalité de supression. Elle se trouve dans le code solution.
 
 ## Step 9 : Protractor
 
