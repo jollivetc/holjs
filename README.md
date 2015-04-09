@@ -502,7 +502,7 @@ angular.module('ticTacToeApp')
   }]);
 ```
 
-Le bouton permettant de créer étant déjà dans la vue, il nous reste à ajouter la méthode permettant d'aller vers l'état "CreateGame".
+Le bouton permettant de créer étant déjà dans la vue, il nous reste à ajouter la méthode permettant d'aller vers l'état "CreateGame" dans le fichier `main.controller.js`.
 
 ```javascript
 main.createGame = function() {
