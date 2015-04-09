@@ -1032,3 +1032,26 @@ $stateProvider
       })
 
 ````
+
+Enfin il faut modifier le template `/client/app/main/main.html` pour avoir l'affichage des scores : 
+
+```html
+        <!-- Scores -->
+        <div class="panel-body">
+          <div class="list-group list-scores" ng-repeat="userScore in main.scores">
+            <div class="list-group-item">
+
+              <!-- Victoires -->
+              <div class="pull-right btn-group btn-group-sm">
+                <label>{{userScore.score}}</label>
+              </div>
+
+              <!-- Nom du joueur -->
+              <div class="bold">
+                <span>{{$index+1}}</span> <span class="glyphicon glyphicon-user"></span> <span>{{userScore.name}}</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+```
