@@ -887,7 +887,7 @@ Nous testons donc que l'authentifcation via Google fonctionne.
 
 ## Step 11 : Top10
 
-### Modification du coté server
+### Modification du coté serveur
 Pour le top 10, nous allons avoir deux modifications à faire du coté du serveur :
 
  - création d'un service permettant de récupérer le top 10 des joueurs lors du chargement de l'application
@@ -976,3 +976,59 @@ La dernière étape est l'envoi du nouveau classement par la websocket dans le f
     socket.emit('game:scores', top10);
   });
 ```
+
+### Modification coté client
+
+Dans le fichier `/client/components/socket/socket.service.js` vous ajoutez une méthode permettant de demander la gestion des events de classement 
+
+```javascript
+manageGames: function (games) {
+        //..... Ne pas supprimer le code existant
+      },
+manageScores: function (scores) {
+        socket.on('game:scores', function (newScores) {
+          scores.splice(0, scores.length);
+          Array.prototype.push.apply(scores, newScores);
+        });
+      },
+//.....
+```
+
+Il faut ensuite invoquer cette méthode lors de l'initialisation de l'application du `mainCtrl`
+dans le fichier `/client/app/main/main.controller.js`. Pour cela il faut aussi modifier l'injection du contrôleur pour ajouter les scores et les exposer sur le contrôler : 
+
+```javascript
+
+angular.module('ticTacToeApp')
+  .controller('MainCtrl', ['$scope', '$state', '$rootScope', 'games', 'scores', 'socket', 'Auth', 'GameState',
+    function ($scope, $state, $rootScope, games, scores, socket, Auth, GameState) {
+
+      var main = this;
+
+      socket.manageGames(games);
+      socket.manageScores(scores);
+
+      main.scores = scores;
+      main.games = games;
+// .......
+
+```
+Il faut enfin modifier la configuration du routeur pour ajouter les scores dans le resolve, dans le fichier `client/app/main/main.js` vous corrigez par : 
+
+```javascript
+$stateProvider
+      .state('main', {
+        url: '/',
+        templateUrl: 'app/main/main.html',
+        resolve: {
+          games: function (Game) {
+            return Game.getAll().$promise;
+          },
+          scores: function (Game) {
+            return Game.getScores().$promise;
+          }
+        },
+        controller: 'MainCtrl as main'
+      })
+
+````
