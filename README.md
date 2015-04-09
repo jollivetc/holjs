@@ -392,6 +392,30 @@ angular.module('ticTacToeApp')
 Nous modifions la vue afin d'afficher notre liste de jeux dans le fichier `main.html`. On utilise ici un `ng-repeat` .  
 
 ```html
+
+<!-- Game creation and filter-->
+<div class="panel-heading">
+  <div class="pull-right">
+    <div class="btn-group game-filter-toolbar">
+     <!-- Filter active -->
+       <button class="btn btn-default btn-xs" ng-class="{active: main.stateFilter == GameState.NOT_OVER}" ng-click="main.stateFilter = GameState.NOT_OVER" type="button">
+                Actives
+        </button>
+              <!-- Filter closed -->
+        <button class="btn btn-default btn-xs" ng-class="{active: main.stateFilter == GameState.OVER}" ng-click="main.stateFilter = GameState.OVER" type="button">
+                Terminées
+         </button>
+       </div>
+            <!-- Game creation -->
+         <button class="btn btn-primary" ng-click="main.createGame()" type="button">
+              Créer partie
+         </button>
+   </div>
+
+  <div class="panel-title"><h5>Liste des parties</h5></div>
+</div>
+
+<!-- Game list -->
 <div class="panel-body">
    <div class="list-group" ng-repeat="game in main.games | filter: {stateGame: main.stateFilter}">
       <div class="list-group-item" ng-click="main.select(game)" ng-class="{ active: game._id == currentGameId }">
