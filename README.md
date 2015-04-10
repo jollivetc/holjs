@@ -80,9 +80,9 @@ Le fichier d'initialisation de la base est `/server/config/seed.js` et contient 
 
 On modifie ce fichier pour permettre la création de quelques jeux :
 ```javascript
-var Game = require('../api/game/game.model');
+var Game = require('../api/game/game.model').Game;
 
-Game.find({}).remove(function() {
+Game.find({}).remove(function() { 
   Game.create({
   	player1 : "Test",
   	player2 : "Admin",
@@ -169,6 +169,7 @@ function handleError(res, err) {
   return res.send(500, err);
 }
 
+
 //load the current game and call next middleware or return 404 if not found
 //load the current game and call next middleware or return 404 if not found
 exports.loadGameById = function (req, res, next, id) {
@@ -198,7 +199,9 @@ exports.index = function (req, res) {
         return res.json(200, games);
       });
 };
+exports.validateAndPlayTurn = function (req, res) {
 
+};
 // Get a single game
 exports.show = function (req, res) {
   return res.json(req.game);
@@ -259,7 +262,7 @@ Vous pouvez maintenant tester en utilisant CURL ou un client REST.
 
 Comme on ne veux pas tester systématiquement à la main que les services REST sont fonctionnels, nous allons écrire des tests d'intégration. Pour cela nous utilisons `supertest`, une librairie proposant un DSL permettant d'écrire les tests.
 
-Pour l'exécution des tests, le générateur a configurer Grunt pour considérer tout fichier respectant le pattern `xxxxxxxxx.spec.js` comme un fichier de test. Vous pouvez donc créer votre fichier sous le nom `main.controller.spec.js` 
+Pour l'exécution des tests, le générateur a configuré Grunt pour considérer tout fichier respectant le pattern `xxxxxxxxx.spec.js` comme un fichier de test. Vous pouvez donc créer votre fichier sous le nom `game.controller.spec.js` et le mettre dans le même répertoire que `game.controller.js`. 
 
 Pour le test de la méthode GET renvoyant la liste des parties, nous obtenons le code suivant pour vérifier que la méthode nous renvoie bien un code 200 avec un body en  JSON contenant un tableau  :
 
@@ -288,7 +291,7 @@ describe('GET /api/games', function() {
 ```
 Nous utilisons aussi la bibliothèque `should` qui permet d'écrire des assertions de façon plus naturelle.
 
-Vous pouvez aussi tester votre service en appelant l'URL `http://localhost:9000/api/games` et vérifier que vous recevez bien la liste des parties que vous avez initialisé dans le fichier `/server/config/seed.js`. Vous pouvez faire un second test sur l'URL `http://localhost:9000/api/game/UN_ID` où `UN_ID` sera la valeur d'un des `_id` des games affichés précédemment.
+Vous pouvez aussi tester votre service en appelant l'URL `http://localhost:9000/api/games` et vérifier que vous recevez bien la liste des parties que vous avez initialisé dans le fichier `/server/config/seed.js`. Vous pouvez faire un second test sur l'URL `http://localhost:9000/api/games/UN_ID` où `UN_ID` sera la valeur d'un des `_id` des games affichés précédemment.
 
 Il est alors possible de refaire quelques tests dans un navigateur ou client REST pour vérifier que l'on écrit bien dans la base MongoDB.
 
@@ -374,7 +377,7 @@ angular.module('ticTacToeApp')
   });
 ```
 
-Nous devons maintenant connecter nos données venant du back vers notre vue. Dans le controller `MainCtrl`, il faut effectuer le cablage et donner l'accès de notre liste de jeux à la vue. Les attributs venant de `resolve` peuvent être injectés dans le controller. C'est ce que nous faisons içi.
+Nous devons maintenant connecter nos données venant du back vers notre vue. Dans le controller `MainCtrl`, il faut effectuer le cablage et donner l'accès de notre liste de jeux à la vue. Les attributs venant de `resolve` peuvent être injectés dans le controller. C'est ce que nous faisons içi dans `/client/app/main/main.controller.js`.
 
 ```javascript
 angular.module('ticTacToeApp')
@@ -504,12 +507,23 @@ angular.module('ticTacToeApp')
 
 Le bouton permettant de créer étant déjà dans la vue, il nous reste à ajouter la méthode permettant d'aller vers l'état "CreateGame" dans le fichier `main.controller.js`.
 
+Il faut injecter `$state` au niveau de la déclaration du controller.
+
 ```javascript
-main.createGame = function() {
-  $state.go('main.creategame'); // Penser à injecter le $state dans la fonction du controller
-}
- 
+angular.module('ticTacToeApp')
+  .controller('MainCtrl', ['$scope','$state' 'games', 'GameState',  function ($scope, $state, games, GameState) {
+    var main = this;
+    main.games = games;
+
+    $scope.GameState = GameState;
+    main.stateFilter = GameState.NOT_OVER;
+    main.createGame = function() {
+        $state.go('main.creategame'); // Penser à injecter le $state dans la fonction du controller
+        };
+  }])
+
 ```
+Si vous testez, vous ne verrez pas la nouvelle partie, car elle est poussée dans la liste par la websocket. Vous pouvez par contre rafraichir la page pour voir les parties créées.
 
 Il restera à implementer le sous état `main.gameboard` dans lequelle on affichera le plateau de jeu.
 
@@ -579,7 +593,7 @@ exports.destroy = function (req, res) {
 Ensuite vous créez le fichier `/server/api/game/game.socket.js` et vous ajouter le code suivant dedans :
 
 ```javascript
-var Game = require('./game.model');
+var Game = require('./game.model').Game;
 
 exports.register = function(socket) {
   Game.on('game:save', function (doc) {
@@ -697,7 +711,7 @@ exports.validateAndPlayTurn = function (req, res) {
     });
   };
 
-  ruleServiceGame.validateAndplayTurn(req.game, position, userName, callback);
+  ruleServiceGame.validateAndPlayTurn(req.game, position, userName, callback);
 };
 ```
 Nous invoquons la méthode `validateAndPlayTurn` en lui donnant le jeu, la position jouée, le nom du joueur et une fonction de callback.
