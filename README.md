@@ -34,6 +34,7 @@ var GameConst = {
   signPlayer: {'1': 'X', '2': 'O'}
 };
 GameConst.emptyBoard = new Array(10).join(GameConst.signEmpty);
+
 /**
  * Schema Game
  *
@@ -54,6 +55,7 @@ var Game = mongoose.model('Game', GameSchema);
 module.exports.Game = Game;
 module.exports.GameState = GameState;
 module.exports.GameConst = GameConst;
+
 ```
 
 Vous allez commencer à utiliser ce modèle pour initialiser des données dans la base.
@@ -169,9 +171,7 @@ function handleError(res, err) {
   return res.send(500, err);
 }
 
-
-//load the current game and call next middleware or return 404 if not found
-//load the current game and call next middleware or return 404 if not found
+// Load the current game and call next middleware or return 404 if not found
 exports.loadGameById = function (req, res, next, id) {
   var query = Game.findById(id);
 
@@ -187,7 +187,6 @@ exports.loadGameById = function (req, res, next, id) {
   });
 };
 
-
 // Get list of games
 exports.index = function (req, res) {
   Game.find()
@@ -199,9 +198,7 @@ exports.index = function (req, res) {
         return res.json(200, games);
       });
 };
-exports.validateAndPlayTurn = function (req, res) {
 
-};
 // Get a single game
 exports.show = function (req, res) {
   return res.json(req.game);
@@ -240,6 +237,12 @@ exports.destroy = function (req, res) {
     return res.send(204);
   });
 };
+
+// Cette méthode sera codée plus tard
+exports.validateAndPlayTurn = function (req, res) {
+
+};
+
 ```
 Les méthodes des modèles Mongoose sont asynchrones et prennent en paramètres des fonctions callback qui recevront en argument une erreur en premier paramètre et le résultat de la requête en second paramètre.
 
@@ -972,7 +975,6 @@ Game.getTop10 = function(callback){
       })
 };
 
-module.exports = Game;
 ```
 Comme nous plaçons le nom du joueur gagnant dans la propriété `winner` du l'objet `Game`, cette requête
 
@@ -991,12 +993,13 @@ router.get('/scores/10', controller.scores);
 Dans le fichier `/server/api/user/user.controller.js` nous ajoutons la méthode correspondante :
 
 ```javascript
-var Game = require('../game/game.model');
+var Game = require('../game/game.model').Game;
 //...
 exports.scores = function(req, res) {
   Game.getTop10(function(err, scores){
     if(err){ return handleError(res, err); }
     return res.json(200, scores);})
+  });
 };
 ```
 
