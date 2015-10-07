@@ -151,7 +151,7 @@ router.delete('/:id', controller.destroy);
 
 module.exports = router;
 ```
-La syntaxe `router.param(paramName, aFunction)` permet de dire que lorsque l'on utilisera une route contenant un paramètre `paramName`, il faudra passer par le middleware correspondant à la fonction.
+La syntaxe `router.param(paramName, aFunction)` permet de dire que lorsque l'on utilisera une route contenant un paramètre `paramName`, il faudra passer par le middleware correspondent à la fonction.
 Celui ci recevra en plus des objets requête et réponse, une fonction `next` et le paramètre. Vous pourrez alors décider de rendre immédiatement la réponse ou passer la main au middleware suivant en invoquant la fonction `next`.
  Cette syntaxe nous permet de n'avoir qu'une seule fois le code pour la recherche d'une partie et la gestion des erreurs associées (500 ou 404).
 
@@ -990,7 +990,7 @@ Ensuite nous créons un service pour la récupération du top10.
 ```javascript
 router.get('/scores/10', controller.scores);
 ```
-Dans le fichier `/server/api/user/user.controller.js` nous ajoutons la méthode correspondante :
+Dans le fichier `/server/api/user/user.controller.js` nous ajoutons la méthode correspondente :
 
 ```javascript
 var Game = require('../game/game.model').Game;
